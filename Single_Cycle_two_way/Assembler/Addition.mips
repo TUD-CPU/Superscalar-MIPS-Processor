@@ -1,0 +1,11 @@
+    addi $1 $0 100
+    addi $2 $0 0
+    addi $3 $0 0
+.Loop
+    beq $2 $1 .End
+    addi $2 $2 1
+    add $3 $3 $2
+    j .Loop
+.End
+    sw $3 0($0)
+    exit

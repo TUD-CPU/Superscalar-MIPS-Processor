@@ -1,0 +1,17 @@
+.Start
+    addi $1 $0 2
+    j .Label
+    addi $2 $0 6
+    addi $3 $0 9
+    beq $1 $2 .Label
+    beq $3 $3 .Start
+    idle
+    idle
+.Label
+    add $1 $2 $3
+    idle
+    idle
+    idle
+    idle
+    add $1 $2 $3
+.End
