@@ -34,8 +34,8 @@ begin
 		wait for 10 ns;
 
 		-- do cylces until end instruction
-		while (instrD1 /= x"FFFFFFFF" AND instrD2 /= x"FFFFFFFF") and count < 2000 loop
-		-- while (instrD1 /= x"FFFFFFFF" AND instrD2 /= x"FFFFFFFF") loop
+		while (instrD1 /= x"FFFFFFFF" AND instrD2 /= x"FFFFFFFF") loop
+		-- while (instrD1 /= x"FFFFFFFF" AND instrD2 /= x"FFFFFFFF") and count < 1000 loop
 			clk <= '1';
 			wait for 10 ns;
 			clk <= '0';

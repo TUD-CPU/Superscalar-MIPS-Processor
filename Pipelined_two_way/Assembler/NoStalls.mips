@@ -1,5 +1,5 @@
-    addi $1 $0 100
     addi $2 $0 0
+    addi $1 $0 100
     addi $3 $0 0
     sw $0 0($0)
 .loop

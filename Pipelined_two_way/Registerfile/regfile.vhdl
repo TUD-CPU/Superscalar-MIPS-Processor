@@ -38,21 +38,28 @@ begin
     end if;
   end process;
 
-  process(clk, a1, a2, a4, a5) begin
-    if (to_integer(unsigned(a1)) = 0) then rd1 <= x"00000000";
-    else rd1 <= mem(to_integer(unsigned(a1)));
-    end if;
+  -- process(clk, a1, a2, a4, a5) begin
+    -- if (to_integer(unsigned(a1)) = 0) then rd1 <= x"00000000";
+    -- else rd1 <= mem(to_integer(unsigned(a1)));
+    -- end if;
 
-    if (to_integer(unsigned(a2)) = 0) then rd2 <= x"00000000";
-    else rd2 <= mem(to_integer(unsigned(a2)));
-    end if;
+    -- if (to_integer(unsigned(a2)) = 0) then rd2 <= x"00000000";
+    -- else rd2 <= mem(to_integer(unsigned(a2)));
+    -- end if;
 	
-	if (to_integer(unsigned(a4)) = 0) then rd3 <= x"00000000";
-    else rd3 <= mem(to_integer(unsigned(a4)));
-    end if;
+	-- if (to_integer(unsigned(a4)) = 0) then rd3 <= x"00000000";
+    -- else rd3 <= mem(to_integer(unsigned(a4)));
+    -- end if;
 	
-	if (to_integer(unsigned(a5)) = 0) then rd4 <= x"00000000";
-    else rd4 <= mem(to_integer(unsigned(a5)));
-    end if;
-  end process;
+	-- if (to_integer(unsigned(a5)) = 0) then rd4 <= x"00000000";
+    -- else rd4 <= mem(to_integer(unsigned(a5)));
+    -- end if;
+  -- end process;
+  
+  rd1 <= x"00000000" when to_integer(unsigned(a1)) = 0 else mem(to_integer(unsigned(a1)));
+  rd2 <= x"00000000" when to_integer(unsigned(a2)) = 0 else mem(to_integer(unsigned(a2)));
+  
+  rd3 <= x"00000000" when to_integer(unsigned(a4)) = 0 else mem(to_integer(unsigned(a4)));
+  rd4 <= x"00000000" when to_integer(unsigned(a5)) = 0 else mem(to_integer(unsigned(a5)));
+  
 end;

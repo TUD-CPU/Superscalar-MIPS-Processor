@@ -32,11 +32,14 @@ entity Hazard_Unit is
 		StallF     : out std_logic;
         StallD1    : out std_logic;
         StallE1    : out std_logic;
+        StallM1    : out std_logic;
+        StallW1    : out std_logic;
         FlushE1    : out std_logic;
         FlushM1    : out std_logic;
         StallD2    : out std_logic;
         StallE2    : out std_logic;
         StallM2    : out std_logic;
+        StallW2    : out std_logic;
         FlushE2    : out std_logic;
         FlushM2    : out std_logic;
         FlushW2    : out std_logic;
@@ -118,12 +121,15 @@ begin
     StallF  <= lwstall OR branchstall OR sameAddressStall OR readWriteStall;
     StallD1 <= lwstall OR branchstall OR sameAddressStall OR readWriteStall;
 	StallE1 <= sameAddressStall;
+	StallM1 <= '0';
+	StallW1 <= '0';
     FlushE1 <= lwstall OR branchstall OR readWriteStall;
 	FlushM1 <= sameAddressStall;
 	
     StallD2 <= lwstall OR branchstall OR sameAddressStall OR readWriteStall;
 	StallE2 <= sameAddressStall OR readWriteStall;
-	StallM2 <= sameAddressStall;
+	StallM2 <= sameAddressStall OR readWriteStall;
+	StallW2 <= readWriteStall; -- Pruefe forwarding von resultw2 nach execution stage 1 und 2
     FlushE2 <= lwstall OR branchstall;
 	FlushM2 <= readWriteStall;
 	FlushW2 <= sameAddressStall;

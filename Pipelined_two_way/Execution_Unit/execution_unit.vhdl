@@ -22,6 +22,7 @@ entity execution_unit is
 		StallM        : in std_logic;
 		FlushM        : in std_logic;
 		ReadDataM     : in std_logic_vector(31 downto 0);
+		StallW        : in std_logic;
 		FlushW        : in std_logic;
 		BranchD_out   : out std_logic;
 		JumpD_out     : out std_logic;
@@ -187,6 +188,7 @@ architecture structure of execution_unit is
     component pipeline_register_W is
         port (
             clk       : in std_logic;
+			Enable    : in std_logic;
 			Clear     : in std_logic;
             AluoutM   : in std_logic_vector(31 downto 0);
             ReadDataM : in std_logic_vector(31 downto 0);
@@ -225,7 +227,7 @@ architecture structure of execution_unit is
     signal ALUOutM                         : std_logic_vector(31 downto 0);
 	
     -- Writeback
-    signal MemToRegW          : std_logic;
+    signal MemToRegW, not_StallW          : std_logic;
     signal AluoutW, ReadDataW : std_logic_vector(31 downto 0);
 	
 	
@@ -348,8 +350,10 @@ architecture structure of execution_unit is
         MemWriteM  => MemWriteM);
 
     --Writeback
+	not_StallW <= not StallW;
     writeback : pipeline_register_W port map(
         clk       => clk,
+		Enable    => not_StallW,
 		Clear     => FlushW,
         AluoutM   => AluoutM,
         ReadDataM => ReadDataM,

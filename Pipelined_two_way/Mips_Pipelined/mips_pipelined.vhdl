@@ -87,6 +87,7 @@ architecture structure of mips_pipelined is
 		StallM        : in std_logic;
 		FlushM        : in std_logic;
 		ReadDataM     : in std_logic_vector(31 downto 0);
+		StallW        : in std_logic;
 		FlushW        : in std_logic;
 		BranchD_out   : out std_logic;
 		JumpD_out     : out std_logic;
@@ -212,19 +213,22 @@ architecture structure of mips_pipelined is
 		StallF     : out std_logic;
         StallD1    : out std_logic;
         StallE1    : out std_logic;
+        StallM1    : out std_logic;
+        StallW1    : out std_logic;
         FlushE1    : out std_logic;
         FlushM1    : out std_logic;
         StallD2    : out std_logic;
         StallE2    : out std_logic;
         StallM2    : out std_logic;
+        StallW2    : out std_logic;
         FlushE2    : out std_logic;
-		FlushM2    : out std_logic;
+        FlushM2    : out std_logic;
         FlushW2    : out std_logic;
 		Stall2     : out std_logic
     );
 	end component;
 	
-    signal StallF, StallD1, StallE1, StallM1, FlushE1, FlushM1, FlushW1, StallD2, StallE2, StallM2, FlushE2, FlushM2, FlushW2, Stall2, not_clk : std_logic;
+    signal StallF, StallD1, StallE1, StallM1, FlushE1, FlushM1, FlushW1, StallD2, StallE2, StallM2, FlushE2, FlushM2, FlushW2, Stall2, not_clk, StallW1, StallW2 : std_logic;
     signal JumpD1, JumpD2, PCsrcD1, PCsrcD2, RegWriteE1, RegWriteE2, MemtoRegE1, MemtoRegE2, RegWriteM1, RegWriteM2 : std_logic;
     signal BranchD1, BranchD2, MemToRegM1, MemToRegM2, MemWriteM1, MemWriteM2, RegWriteW1, RegWriteW2, ClearD1, ClearD2: std_logic;
     signal RsD1, RsD2, RtD1, RtD2, RsE1, RsE2, RtE1, RtE2, WriteRegE1, WriteRegE2, WriteRegM1, WriteRegM2, WriteRegW1, WriteRegW2 : std_logic_vector(4 downto 0);
@@ -338,11 +342,14 @@ begin
 										StallF => StallF,
 										StallD1 => StallD1,
 										StallE1 => StallE1,
+										StallM1 => StallM1,
+										StallW1 => StallW1,
 										FlushE1 => FlushE1,
 										FlushM1 => FlushM1,
 										StallD2 => StallD2,
 										StallE2 => StallE2,
 										StallM2 => StallM2,
+										StallW2 => StallW2,
 										FlushE2 => FlushE2,
 										FlushM2 => FlushM2,
 										FlushW2 => FlushW2,
@@ -380,6 +387,7 @@ begin
 												StallM => StallM1,
 												FlushM => FlushM1,
 												ReadDataM => ReadDataM1,
+												StallW => StallW1,
 												FlushW => FlushW1,
 												BranchD_out => BranchD1,
 												JumpD_out => JumpD1,
@@ -422,6 +430,7 @@ begin
 												StallM => StallM2,
 												FlushM => FlushM2,
 												ReadDataM => ReadDataM2,
+												StallW => StallW2,
 												FlushW => FlushW2,
 												BranchD_out => BranchD2,
 												JumpD_out => JumpD2,
@@ -456,7 +465,7 @@ begin
 								y => InstrF2);
 					
 	-- always activate pipeline register M in execution unit 1
-	StallM1 <= '0';
+	-- StallM1 <= '0';
 	
 	-- output InstrD for testbench
 	instrD1_out <= InstrD1;

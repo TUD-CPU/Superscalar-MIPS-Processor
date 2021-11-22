@@ -8,6 +8,7 @@ use ieee.numeric_std.all;
 entity pipeline_register_W is
     port (
         clk       : in std_logic;
+		Enable     : in std_logic;
 		Clear      : in std_logic;
         AluoutM   : in std_logic_vector(31 downto 0);
         ReaddataM : in std_logic_vector(31 downto 0);
@@ -30,7 +31,7 @@ architecture behavior of pipeline_register_W is
     signal writeReg : std_logic_vector(4 downto 0);
 begin
     process (clk) begin
-        if rising_edge(clk) then
+        if rising_edge(clk) and Enable = '1' then
 			-- only clear regWrite so nothing will be stored in a register
 			if Clear = '1' then
 				regWrite <= '0';
