@@ -118,6 +118,7 @@ architecture structure of mips_pipelined is
 	
 	component Forwarding_Unit is
     port (
+		clk         : in std_logic;
 		RD1D1       : in std_logic_vector(31 downto 0);
 		RD2D1       : in std_logic_vector(31 downto 0);
 		RD1E1       : in std_logic_vector(31 downto 0);
@@ -272,7 +273,8 @@ begin
 								PCplus4_out => PCplus4,
 								PCplus8_out => PCplus8);
 								
-    forwarding : Forwarding_Unit port map(  RD1D1 => RD1D1,
+    forwarding : Forwarding_Unit port map(  clk => clk,
+											RD1D1 => RD1D1,
 											RD2D1 => RD2D1,
 											RD1E1 => RD1E1,
 											RD2E1 => RD2E1,
@@ -314,7 +316,7 @@ begin
 											WriteDataE2 => WriteDataE2 );
 										
 	hazardUnit : Hazard_Unit port map( InstrF1 => InstrF1,
-										InstrF2 => InstrF2,
+										InstrF2 => Instr2,
 										RsE1 => RsE1,
 										RtE1 => RtE1,
 										RsD1 => RsD1,

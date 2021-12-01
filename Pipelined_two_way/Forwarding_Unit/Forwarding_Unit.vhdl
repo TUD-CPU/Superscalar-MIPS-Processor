@@ -3,6 +3,8 @@ use ieee.std_logic_1164.all;
 
 entity Forwarding_Unit is
     port (
+		clk         : in std_logic;
+	
 		RD1D1       : in std_logic_vector(31 downto 0);
 		RD2D1       : in std_logic_vector(31 downto 0);
 		RD1E1       : in std_logic_vector(31 downto 0);
@@ -55,7 +57,7 @@ begin
 	
 	
 	--Forwarding D1    missing branchstall!!!
-	process (RsD1, RtD1, WriteRegM1, RegWriteM1, WriteRegM2, RegWriteM2)begin
+	process (clk, RsD1, RtD1, WriteRegM1, RegWriteM1, WriteRegM2, RegWriteM2, RD1D1, RD2D1)begin
 		if ( (RsD1 /= "00000") AND (RsD1 = WriteRegM2) AND (RegWriteM2 = '1') ) then
 			EqualAD1 <= ALUOutM2;
 		elsif ( (RsD1 /= "00000") AND (RsD1 = WriteRegM1) AND (RegWriteM1 = '1') ) then
@@ -75,7 +77,7 @@ begin
 	end process;
 	
 	--Forwarding D2    missing branchstall!!!
-	process (RsD2, RtD2, WriteRegM1, RegWriteM1, WriteRegM2, RegWriteM2)begin
+	process (clk, RsD2, RtD2, WriteRegM1, RegWriteM1, WriteRegM2, RegWriteM2, RD1D1, RD2D1)begin
 		if ( (RsD2 /= "00000") AND (RsD2 = WriteRegM2) AND (RegWriteM2 = '1') ) then
 			EqualAD2 <= ALUOutM2;
 		elsif ( (RsD2 /= "00000") AND (RsD2 = WriteRegM1) AND (RegWriteM1 = '1') ) then
@@ -95,7 +97,7 @@ begin
 	end process;
 
     --Forwarding E1
-    process (RsE1, RtE1, RegWriteM1, RegWriteW1, WriteRegM1, WriteRegW1, RegWriteM2, RegWriteW2, WriteRegM2, WriteRegW2) begin
+    process (clk, RsE1, RtE1, RegWriteM1, RegWriteW1, WriteRegM1, WriteRegW1, RegWriteM2, RegWriteW2, WriteRegM2, WriteRegW2) begin
         if ((RsE1 /= "00000") and (RsE1 = WriteRegM2) and (RegWriteM2 = '1')) then
             SrcAE1 <= ALUOutM2;
 		elsif ((RsE1 /= "00000") and (RsE1 = WriteRegM1) and (RegWriteM1 = '1')) then
@@ -120,7 +122,7 @@ begin
     end process;
 	
 	--Forwarding E2
-    process (RsE2, RtE2, RegWriteM1, RegWriteW1, WriteRegM1, WriteRegW1, RegWriteM2, RegWriteW2, WriteRegM2, WriteRegW2) begin
+    process (clk, RsE2, RtE2, RegWriteM1, RegWriteW1, WriteRegM1, WriteRegW1, RegWriteM2, RegWriteW2, WriteRegM2, WriteRegW2) begin
         if ((RsE2 /= "00000") and (RsE2 = WriteRegM2) and (RegWriteM2 = '1')) then
             SrcAE2 <= ALUOutM2;
 		elsif ((RsE2 /= "00000") and (RsE2 = WriteRegM1) and (RegWriteM1 = '1')) then
