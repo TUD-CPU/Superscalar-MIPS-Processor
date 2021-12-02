@@ -35,7 +35,7 @@ do
     fi
     echo "Build OK"
 
-    if !(ghdl -r $val --vcd=$val".vcd") #VCD-Dump-Checking
+    if !(ghdl -r $val --vcd=$val".vcd" --stack-size=1000000) #VCD-Dump-Checking
       then
         exit 1;
     fi
