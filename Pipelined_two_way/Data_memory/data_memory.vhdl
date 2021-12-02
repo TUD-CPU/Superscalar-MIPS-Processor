@@ -21,33 +21,10 @@ entity data_memory is
 end;
 
 architecture behavior of data_memory is
-  -- type ramtype is array (size downto 0) of std_logic_vector(7 downto 0);
-  -- signal mem: ramtype;
   type ramtype is array (size downto 0) of std_logic_vector(31 downto 0);
   signal mem: ramtype;
 begin
 	
-	-- process(clk,addr) begin
-      -- if rising_edge(clk) then
-        -- if memwrite = '1' then
-			-- mem(to_integer(unsigned(addr))+3) <= data_in(31 downto 24);
-			-- mem(to_integer(unsigned(addr))+2) <= data_in(23 downto 16);
-			-- mem(to_integer(unsigned(addr))+1) <= data_in(15 downto 8);
-			-- mem(to_integer(unsigned(addr))) <= data_in(7 downto 0);
-        -- end if;
-      -- end if;
-    -- end process;
-
-    -- process(addr) begin
-	  -- if to_integer(unsigned(addr)) < size then
-	  -- data_out <= mem(to_integer(unsigned(addr))+3) &
-			 -- mem(to_integer(unsigned(addr))+2) &
-			 -- mem(to_integer(unsigned(addr))+1) &
-			 -- mem(to_integer(unsigned(addr)));
-	  -- else
-	    -- data_out <= x"00000000";
-	  -- end if;
-	  
 	  process(clk,addr1,addr2) begin
       if rising_edge(clk) then
         if memwrite1 = '1' then
