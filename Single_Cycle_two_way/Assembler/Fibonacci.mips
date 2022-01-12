@@ -1,0 +1,33 @@
+    sw $0 0($0) #load 0 into location 0
+    addi $1 $0 1
+    sw $1 4($0) #load into location 4
+    addi $1 $0 46  #fib number to calculate
+    addi $2 $0 2    #current calculated number
+    beq $0 $1 .End
+    addi $3 $0 1
+    beq $3 $1 .End
+.Loop
+    addi $3 $0 1
+    addi $4 $0 2
+    sub $5 $2 $3
+    sub $6 $2 $4
+    add $5 $5 $5
+    add $5 $5 $5
+    add $6 $6 $6
+    add $6 $6 $6
+    lw $3 0($5) #load fib i-1
+    lw $4 0($6) #load fib i-2
+    add $5 $3 $4
+    addi $6 $2 0
+    add $6 $6 $6
+    add $6 $6 $6
+    sw $5 0($6)
+    beq $1 $2 .End
+    addi $2 $2 1
+    j .Loop
+.End
+    addi $3 $2 0
+    add $3 $3 $3
+    add $3 $3 $3
+    lw $10 0($3)
+    exit

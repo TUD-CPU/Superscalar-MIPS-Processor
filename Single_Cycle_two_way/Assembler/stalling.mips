@@ -1,0 +1,14 @@
+	addi $1 $0 100
+	addi $2 $0 0
+.loop
+	beq $1 $2 .end
+	addi $2 $2 1
+	add $3 $2 $2
+	sub $4 $3 $2
+	and $5 $4 $3
+	or $6 $5 $3
+	j .loop
+.end
+	sw $4 0($0)
+	lw $4 0($0)
+	exit

@@ -1,0 +1,28 @@
+    addi $1 $0 2158   #number to start in
+    addi $3 $0 0
+    addi $7 $0 1
+.Loop
+    beq $1 $7 .End
+    and $6 $1 $7
+    addi $3 $3 1
+    beq $6 $0 .Divide
+.Mul3+1
+    add $2 $1 $1
+    add $2 $2 $1
+    add $1 $2 $7
+    j .Loop
+.Divide
+    addi $8 $0 0
+    addi $9 $0 0
+.DivideLoop
+    beq $1 $9 .DivideEnd
+    addi $8 $8 1
+    addi $9 $9 2
+    j .DivideLoop
+.DivideEnd
+    addi $1 $8 0
+    j .Loop
+.End
+    sw $3 0($0)
+    lw $3 0($0)
+    exit
