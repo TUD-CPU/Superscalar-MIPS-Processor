@@ -7,48 +7,64 @@
 #include<unordered_map>
 
 
-enum Instr {rtype, lw, sw, beq, addi, j, idle};
-enum RType {rAdd, rSub, rAnd, rOr, rSlt};
+enum Instr {rtype, lw, sw, beq, addi, lui, xori, j, idle};
+enum RType {rAdd, rSub, rAnd, rOr, rNor, rXor, rSll, rSrl, rSra, rSlt};
 
 std::unordered_map<std::string, int> labels;
 
 std::ofstream out;
 int memloc;
 
-void assembleFile(std::string input, std::string output);
+void assembleFile(std::string input, std::string output, int euCount);
 void handleRtype(std::string line, int lineNum);
 void handleLw(std::string line, int lineNum);
 void handleSw(std::string line, int lineNum);
 void handleBeq(std::string line, int lineNum);
 void handleAddi(std::string line, int lineNum);
+void handleLui(std::string line, int lineNum);
+void handleXori(std::string line, int lineNum);
+void handleNot(std::string line, int lineNum);
 void handleJ(std::string line, int lineNum);
 void handleIdle(std::string line, int lineNum);
 void handleExit(std::string line, int lineNum);
-std::string rtypeInstr(int r1, int r2, int r3, RType type);
+std::string rtypeInstr(int r1, int r2, int r3, int shamt, RType type);
 std::string lwInstr(int r1, int offset, int r2);
 std::string swInstr(int r1, int offset, int r2);
 std::string beqInstr(int r1, int r2, int offset);
 std::string addiInstr(int r1, int r2, int offset);
+std::string luiInstr(int r1, int imm);
+std::string xoriInstr(int r1, int r2, int imm);
 std::string jInstr(int address);
 std::string intToBitString(int i, int length);
 
 int main(int argc, char **argv){
     std::string inPath;
     std::string outPath;
-
+    int euCount = 2;
     if(argc == 2){
         inPath = argv[1];
         outPath = "out.txt";
     } else if(argc == 3){
         inPath = argv[1];
         outPath = argv[2];
+    } else if(argc == 4){
+	inPath = argv[1];
+        outPath = argv[2];
+	try{
+	    euCount = std::stoi(argv[3]);
+        }
+	catch(...){
+	    std::cout << "Parameter 4 (execution unit count) is not a number!" << std::endl;
+	    exit(1);
+	}
+        
     }
-    assembleFile(inPath, outPath);
+    assembleFile(inPath, outPath, euCount);
 
     return 0;
 }
 
-void assembleFile(std::string input, std::string output){
+void assembleFile(std::string input, std::string output, int euCount){
     std::ifstream in1(input);
     std::ifstream in2(input);
 
@@ -85,12 +101,20 @@ void assembleFile(std::string input, std::string output){
                 "use ieee.numeric_std.all;\n"
                 "\n"
                 "entity instr_mem is\n"
-                "\tport (\n"
-                "\t\tpc1: in std_logic_vector(31 downto 0);\n"
-				"\t\tpc2: in std_logic_vector(31 downto 0);\n"
-				"\t\tinstr1: out std_logic_vector(31 downto 0);\n"
-				"\t\tinstr2: out std_logic_vector(31 downto 0)\n"
-                "\t);\n"
+                "\tport (\n";
+
+	for(int i = 1; i <= euCount; i++){
+		out << "\t\tpc" << i << ": in std_logic_vector(31 downto 0);\n";
+	}
+
+	for(int i = 1; i <= euCount; i++){
+		out << "\t\tinstr" << i << ": out std_logic_vector(31 downto 0)";
+		if(i < euCount){
+			out << ";";
+		}
+		out << "\n";
+	}
+        out << "\t);\n"
                 "end;\n"
                 "\n"
                 "architecture behavior of instr_mem is\n"
@@ -143,6 +167,12 @@ void assembleFile(std::string input, std::string output){
                         handleBeq(line, lineNum);
                     } else if(line.rfind("addi", 0) == 0){
                         handleAddi(line, lineNum);
+                    } else if(line.rfind("lui", 0) == 0){
+                        handleLui(line, lineNum);
+                    } else if(line.rfind("xori", 0) == 0){
+                        handleXori(line, lineNum);
+                    } else if(line.rfind("not", 0) == 0){
+                        handleNot(line, lineNum);
                     } else if(line.rfind("j", 0) == 0){
                         handleJ(line, lineNum);
                     } else if(line.rfind("idle", 0) == 0){
@@ -161,10 +191,20 @@ void assembleFile(std::string input, std::string output){
             }
         }
         
-        out <<  "\n\tprocess(pc1, pc2) begin\n"
-                "\t\tinstr1 <= mem(to_integer(unsigned(pc1(31 downto 2))));\n"
-				"\t\tinstr2 <= mem(to_integer(unsigned(pc2(31 downto 2))));\n"
-                "\n"
+        out <<  "\n\tprocess(";
+
+	for(int i = 1; i <= euCount; i++){
+		out << "pc" << i;
+		if(i < euCount) out << ", ";
+	}
+
+	out << ") begin\n";
+	
+	for(int i = 1; i <= euCount; i++){
+		out << "\t\tinstr" << i << " <= mem(to_integer(unsigned(pc" << i << "(31 downto 2))));\n";
+	}
+
+        out << "\n"
                 "\tend process;\n"
                 "end;\n";
 
@@ -180,6 +220,7 @@ void handleRtype(std::string line, int lineNum){
     int r1 = 0;
     int r2 = 0;
     int r3 = 0;
+    int shamt = 0;
     std::stringstream ss(line);
     std::string entry;
     for(int i=0; i<4; ++i){
@@ -195,6 +236,16 @@ void handleRtype(std::string line, int lineNum){
                     r = rAnd;
                 } else if(entry.compare("or") == 0){
                     r = rOr;
+                } else if(entry.compare("xor") == 0){
+                    r = rXor;
+                } else if(entry.compare("nor") == 0){
+                    r = rNor;
+                } else if(entry.compare("sll") == 0){
+                    r = rSll;
+                } else if(entry.compare("srl") == 0){
+                    r = rSrl;
+                } else if(entry.compare("sra") == 0){
+                    r = rSra;
                 } else if(entry.compare("slt") == 0){
                     r = rSlt;
                 }
@@ -221,7 +272,17 @@ void handleRtype(std::string line, int lineNum){
             case 3:
                 if(entry[0] == '$'){
                     r3 = std::stoi(entry.substr(1, entry.size()));
-                } else {
+		    shamt = 0;
+                }
+		else if(r == rSll || r == rSrl || r == rSra){
+		    try{
+                   	 shamt = std::stoi(entry);
+			 r3 = 0;
+                    }
+                    catch(...){
+                        std::cout << "Error in line " << lineNum << "! Unexpected offset." << std::endl;
+                    }
+		}else {
                     std::cout << "Error in line " << lineNum << "! Register expected." << std::endl;
                     exit(1);
                 }
@@ -237,7 +298,7 @@ void handleRtype(std::string line, int lineNum){
         }
     }
 
-    out << "\tmem(" << memloc << ")\t<= \"" << rtypeInstr(r1, r2, r3, r) << "\";\t--" << line << std::endl;
+    out << "\tmem(" << memloc << ")\t<= \"" << rtypeInstr(r1, r2, r3, shamt, r) << "\";\t--" << line << std::endl;
 }
 
 void handleLw(std::string line, int lineNum){
@@ -472,6 +533,145 @@ void handleAddi(std::string line, int lineNum){
     out << "\tmem(" << memloc << ")\t<= \"" << addiInstr(r1, r2, offset) << "\";\t--" << line << std::endl;
 }
 
+void handleXori(std::string line, int lineNum){
+    int r1, r2, offset;
+    std::stringstream ss(line);
+    std::string entry;
+    if(!std::getline(ss, entry, ' ') || !entry.compare("xori") == 0){
+        std::cout << "Error in line " << lineNum << "!" << std::endl;
+        exit(1);
+    }
+    for(int i=1; i<4; ++i){
+        if(std::getline(ss, entry, ' ')){
+
+            switch (i){
+            case 1:
+                if(entry[0] == '$'){
+                    r1 = std::stoi(entry.substr(1, entry.size()));
+                } else {
+                    std::cout << "Error in line " << lineNum << "! Register expected." << std::endl;
+                    exit(1);
+                }
+                break;
+
+            case 2:
+                if(entry[0] == '$'){
+                    r2 = std::stoi(entry.substr(1, entry.size()));
+                } else {
+                    std::cout << "Error in line " << lineNum << "! Register expected." << std::endl;
+                    exit(1);
+                }
+                break;
+
+            case 3:
+                try{
+                    offset = std::stoi(entry);
+                }
+                catch(...){
+                    std::cout << "Error in line " << lineNum << "! Unexpected offset." << std::endl;
+                }
+                
+                break;
+            
+            default:
+                break;
+            }
+
+        } else {
+            std::cout << "Error in line " << line << "(line " << lineNum << ")! Too few operands." << std::endl;
+            exit(1);
+        }
+    }
+    out << "\tmem(" << memloc << ")\t<= \"" << xoriInstr(r1, r2, offset) << "\";\t--" << line << std::endl;
+}
+
+
+void handleNot(std::string line, int lineNum){
+    int r1, r2;
+    std::stringstream ss(line);
+    std::string entry;
+    if(!std::getline(ss, entry, ' ') || !entry.compare("not") == 0){
+        std::cout << "Error in line " << lineNum << "!" << std::endl;
+        exit(1);
+    }
+    for(int i=1; i<3; ++i){
+        if(std::getline(ss, entry, ' ')){
+
+            switch (i){
+            case 1:
+                if(entry[0] == '$'){
+                    r1 = std::stoi(entry.substr(1, entry.size()));
+                } else {
+                    std::cout << "Error in line " << lineNum << "! Register expected." << std::endl;
+                    exit(1);
+                }
+                break;
+
+            case 2:
+                if(entry[0] == '$'){
+                    r2 = std::stoi(entry.substr(1, entry.size()));
+                } else {
+                    std::cout << "Error in line " << lineNum << "! Register expected." << std::endl;
+                    exit(1);
+                }
+                break;
+            
+            default:
+                break;
+            }
+
+        } else {
+            std::cout << "Error in line " << lineNum << "! Too few operands." << std::endl;
+            exit(1);
+        }
+    }
+    out << "\tmem(" << memloc << ")\t<= \"" << rtypeInstr(r1, r2, r2, 0, rNor) << "\";\t--" << line << std::endl;
+}
+
+
+void handleLui(std::string line, int lineNum){
+    int r1, imm;
+    std::stringstream ss(line);
+    std::string entry;
+    if(!std::getline(ss, entry, ' ') || !entry.compare("lui") == 0){
+        std::cout << "Error in line " << lineNum << "!" << std::endl;
+        exit(1);
+    }
+    for(int i=1; i<3; ++i){
+        if(std::getline(ss, entry, ' ')){
+
+            switch (i){
+            case 1:
+                if(entry[0] == '$'){
+                    r1 = std::stoi(entry.substr(1, entry.size()));
+                } else {
+                    std::cout << "Error in line " << lineNum << "! Register expected." << std::endl;
+                    exit(1);
+                }
+                break;
+
+            case 2:
+                try{
+                    imm = std::stoi(entry);
+                }
+                catch(...){
+                    std::cout << "Error in line " << lineNum << "! Unexpected immediate." << std::endl;
+                }
+                
+                break;
+            
+            default:
+                break;
+            }
+
+        } else {
+            std::cout << "Error in line " << lineNum << "! Too few operands." << std::endl;
+            exit(1);
+        }
+    }
+    out << "\tmem(" << memloc << ")\t<= \"" << luiInstr(r1, imm) << "\";\t--" << line << std::endl;
+}
+
 void handleJ(std::string line, int lineNum){
     int address;
     std::stringstream ss(line);
@@ -524,14 +724,14 @@ void handleExit(std::string line, int lineNum){
     out << "\tmem(" << memloc << ")\t<= \"11111111111111111111111111111111\";\t--" << line << std::endl;
 }
 
-std::string rtypeInstr(int r1, int r2, int r3, RType type){
+std::string rtypeInstr(int r1, int r2, int r3, int shamt, RType type){
     std::string out = "";
 
     out += "000000";
     out += intToBitString(r2, 5);
     out += intToBitString(r3, 5);
     out += intToBitString(r1, 5);
-    out += "00000";
+    out += intToBitString(shamt, 5);;
     switch (type){
     case rAdd:
         out += "100000";
@@ -547,6 +747,26 @@ std::string rtypeInstr(int r1, int r2, int r3, RType type){
 
     case rOr:
         out += "100101";
+        break;
+
+    case rNor:
+        out += "100111";
+        break;
+
+    case rXor:
+        out += "100110";
+        break;
+
+    case rSll:
+        out += "000000";
+        break;
+
+    case rSrl:
+        out += "000010";
+        break;
+
+    case rSra:
+        out += "000011";
         break;
 
     case rSlt:
@@ -607,6 +827,34 @@ std::string addiInstr(int r1, int r2, int offset){
     
     return out;
 }
+
+
+std::string xoriInstr(int r1, int r2, int imm){
+    std::string out = "";
+
+    out += "001110";
+    out += intToBitString(r2, 5);
+    out += intToBitString(r1, 5);
+    out += intToBitString(imm, 16);
+
+    
+    return out;
+}
+
+
+std::string luiInstr(int r1, int imm){
+    std::string out = "";
+
+    out += "001111";
+    out += intToBitString(0, 5);
+    out += intToBitString(r1, 5);
+    out += intToBitString(imm, 16);
+
+    
+    return out;
+}
+
+
 
 std::string jInstr(int address){
     std::string out = "";
