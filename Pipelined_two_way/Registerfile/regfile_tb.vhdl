@@ -86,6 +86,29 @@ begin
 	assert rd4 = x"00000006" report "Writing/Reading register 1 failed for a5";
     clk <= '1';
     wait for 10 ns;
+	-- write -1 to reg 2 and to reg 4
+    clk <= '0';
+    we3 <= '1';
+	we6 <= '1';
+    wd3 <= x"FFFFFFFF";
+    wd6 <= x"FFFFFFFF";
+    a3 <= "00010";
+    a6 <= "00100";
+    wait for 10 ns;
+    clk <= '1';
+    wait for 10 ns;
+	-- read register 1,3,4,2 from a1,a2,a4,a5
+    clk <= '0';
+	we3 <= '0';
+	we6 <= '0';
+    a1 <= "00010";
+    a2 <= "00100";
+    a4 <= "00100";
+    a5 <= "00010";
+    wait for 10 ns;
+	assert rd4 = x"00000006" report "Writing/Reading register 1 failed for a5";
+    clk <= '1';
+    wait for 10 ns;
 
     assert false report "End of test";
     wait;

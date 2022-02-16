@@ -115,6 +115,18 @@ architecture structure of datapath is
             y  : out std_logic_vector(w - 1 downto 0)
         );
     end component;
+	
+	component mux4 is
+		generic (w : integer := 8);
+		port (
+			d0 : in std_logic_vector(w - 1 downto 0);
+			d1 : in std_logic_vector(w - 1 downto 0);
+			d2 : in std_logic_vector(w - 1 downto 0);
+			d3 : in std_logic_vector(w - 1 downto 0);
+			s  : in std_logic_vector(1 downto 0);
+			y  : out std_logic_vector(w - 1 downto 0)
+		);
+	end component;
 
     component data_memory is
         generic (size : integer := 63);

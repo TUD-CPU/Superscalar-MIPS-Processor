@@ -25,6 +25,9 @@ begin
         b <= x"00000001";
         wait for 10 ns;
         assert y = x"00000003" report "Calculation not correct";
+		a <= x"FFFFFF70";
+        b <= x"00000004";
+        wait for 10 ns;
         wait;
     end process;
 end;

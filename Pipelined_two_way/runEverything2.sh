@@ -24,7 +24,7 @@ cp -R Execution_Time_Test/mips_pipelined_tb.vhdl Test/
 cd Assembler
 
 g++ Assembler.cpp -o Assembler.out
-./Assembler.out "../$1" ../Test/instr_mem.vhdl
+./Assembler.out "../$1" ../Test/instr_mem.vhdl 2
 cd ..
 
 cd Test

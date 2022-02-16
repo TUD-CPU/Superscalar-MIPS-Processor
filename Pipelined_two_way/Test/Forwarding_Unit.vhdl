@@ -77,7 +77,7 @@ begin
 	end process;
 	
 	--Forwarding D2    missing branchstall!!!
-	process (clk, RsD2, RtD2, WriteRegM1, RegWriteM1, WriteRegM2, RegWriteM2, RD1D1, RD2D1)begin
+	process (clk, RsD2, RtD2, WriteRegM1, RegWriteM1, WriteRegM2, RegWriteM2, RD1D2, RD2D2)begin
 		if ( (RsD2 /= "00000") AND (RsD2 = WriteRegM2) AND (RegWriteM2 = '1') ) then
 			EqualAD2 <= ALUOutM2;
 		elsif ( (RsD2 /= "00000") AND (RsD2 = WriteRegM1) AND (RegWriteM1 = '1') ) then
