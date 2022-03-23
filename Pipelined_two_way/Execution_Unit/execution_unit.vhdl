@@ -57,7 +57,8 @@ architecture structure of execution_unit is
         port (
             a          : in std_logic_vector(31 downto 0);
             b          : in std_logic_vector(31 downto 0);
-            alucontrol : in std_logic_vector(2 downto 0);
+			shamt      : in std_logic_vector(4 downto 0);
+            alucontrol : in std_logic_vector(3 downto 0);
             result     : buffer std_logic_vector(31 downto 0);
             zero       : out std_logic
         );
@@ -81,8 +82,8 @@ architecture structure of execution_unit is
 			MemToRegD   : out std_logic;
 			MemWriteD   : out std_logic;
 			BranchD     : out std_logic;
-			AluControlD : out std_logic_vector(2 downto 0);
-			AluSrcD     : out std_logic;
+			AluControlD : out std_logic_vector(3 downto 0);
+			AluSrcD     : out std_logic_vector(1 downto 0);
 			RegDstD     : out std_logic;
 			JumpD       : out std_logic
 		);
@@ -110,6 +111,14 @@ architecture structure of execution_unit is
             aext : out std_logic_vector(31 downto 0)
         );
     end component;
+	
+	
+	component sl16 is
+		port (
+			a    : in std_logic_vector(15 downto 0);
+			y    : out std_logic_vector(31 downto 0)
+		);
+	end component;
 
     component mux2
         generic (w : integer := 8);
@@ -120,6 +129,18 @@ architecture structure of execution_unit is
             y  : out std_logic_vector(w - 1 downto 0)
         );
     end component;
+	
+	component mux4
+		generic (w : integer := 8);
+		port (
+			d0 : in std_logic_vector(w - 1 downto 0);
+			d1 : in std_logic_vector(w - 1 downto 0);
+			d2 : in std_logic_vector(w - 1 downto 0);
+			d3 : in std_logic_vector(w - 1 downto 0);
+			s  : in std_logic_vector(1 downto 0);
+			y  : out std_logic_vector(w - 1 downto 0)
+		);
+	end component;
 
     component pipeline_register_D is
         port (
@@ -143,24 +164,28 @@ architecture structure of execution_unit is
 				RsD         : in std_logic_vector(4 downto 0);
 				RtD         : in std_logic_vector(4 downto 0);
 				RdD         : in std_logic_vector(4 downto 0);
+				ShamtD      : in std_logic_vector(4 downto 0);
 				SignImmD    : in std_logic_vector(31 downto 0);
+				ZeroImmD    : in std_logic_vector(31 downto 0);
 				RegWriteD   : in std_logic;
 				MemToRegD   : in std_logic;
 				MemWriteD   : in std_logic;
-				ALUControlD : in std_logic_vector(2 downto 0);
-				ALUSrcD     : in std_logic;
+				ALUControlD : in std_logic_vector(3 downto 0);
+				ALUSrcD     : in std_logic_vector(1 downto 0);
 				RegDstD     : in std_logic;
 				RD1E        : out std_logic_vector(31 downto 0);
 				RD2E        : out std_logic_vector(31 downto 0);
 				RsE         : out std_logic_vector(4 downto 0);
 				RtE         : out std_logic_vector(4 downto 0);
 				RdE         : out std_logic_vector(4 downto 0);
+				ShamtE      : out std_logic_vector(4 downto 0);
 				SignImmE    : out std_logic_vector(31 downto 0);
+				ZeroImmE    : out std_logic_vector(31 downto 0);
 				RegWriteE   : out std_logic;
 				MemToRegE   : out std_logic;
 				MemWriteE   : out std_logic;
-				ALUControlE : out std_logic_vector(2 downto 0);
-				ALUSrcE     : out std_logic;
+				ALUControlE : out std_logic_vector(3 downto 0);
+				ALUSrcE     : out std_logic_vector(1 downto 0);
 				RegDstE     : out std_logic
         );
     end component;
@@ -208,17 +233,19 @@ architecture structure of execution_unit is
 	
     -- Decode
 	signal not_StallD, ClearD, ClearD_in, PCSrcD                                     : std_logic;
-    signal RegWriteD, MemtoRegD, MemWriteD, ALUSrcD, RegDstD, JumpD, BranchD, EqualD : std_logic;
-	signal ALUControlD                                    							 : std_logic_vector(2 downto 0);
-    signal RsD, RtD, RdD                                    						 : std_logic_vector(4 downto 0);
-    signal InstrD, PCPlusD, SignImmD, SignImmDsh, PCBranchD, PCJumpD                 : std_logic_vector(31 downto 0);
+    signal RegWriteD, MemtoRegD, MemWriteD, RegDstD, JumpD, BranchD, EqualD          : std_logic;
+	signal ALUSrcD	                                   						      	 : std_logic_vector(1 downto 0);
+	signal ALUControlD                                    							 : std_logic_vector(3 downto 0);
+    signal RsD, RtD, RdD, ShamtD                            						 : std_logic_vector(4 downto 0);
+    signal InstrD, PCPlusD, ZeroImmD, SignImmD, SignImmDsh, PCBranchD, PCJumpD       : std_logic_vector(31 downto 0);
 	
     -- Execute
 	signal not_StallE, ZeroE                                 : std_logic;
-    signal RegWriteE, MemToRegE, MemWriteE, ALUSrcE, RegDstE : std_logic;
-    signal ALUControlE                                       : std_logic_vector(2 downto 0);
-    signal WriteRegE, RtE, RdE                               : std_logic_vector(4 downto 0);
-    signal SrcBE, SignImmE, ALUOutE		                     : std_logic_vector(31 downto 0);
+    signal RegWriteE, MemToRegE, MemWriteE, RegDstE          : std_logic;
+	signal ALUSrcE                                    		 : std_logic_vector(1 downto 0);
+    signal ALUControlE                                       : std_logic_vector(3 downto 0);
+    signal WriteRegE, RtE, RdE, ShamtE                       : std_logic_vector(4 downto 0);
+    signal SrcBE, SignImmE, ZeroImmE, ALUOutE		         : std_logic_vector(31 downto 0);
 	
     -- Memory
 	signal not_StallM                      : std_logic;
@@ -239,6 +266,8 @@ architecture structure of execution_unit is
     RtD <= InstrD(20 downto 16);
 
     RdD <= InstrD(15 downto 11);
+	
+	ShamtD <= InstrD(10 downto 6);
 
 	-- controller
 	control : controller port map(op => InstrD(31 downto 26),
@@ -247,13 +276,17 @@ architecture structure of execution_unit is
 								  MemToRegD => MemToRegD,
 								  MemWriteD => MemWriteD,
 								  BranchD => BranchD,
-								  AluControlD => AluControlD,
-								  AluSrcD => AluSrcD,
+								  AluControlD => ALUControlD,
+								  AluSrcD => ALUSrcD,
 								  RegDstD => RegDstD,
 								  JumpD => JumpD);
 								  
 	-- sign extender
     se : signext port map(InstrD(15 downto 0), SignImmD);
+	
+	
+	-- shift left 16
+	ze : sl16 port map(a => InstrD(15 downto 0), y => ZeroImmD);
 	
 	-- shift left2
     immsh : sl2 port map(SignImmD, SignImmDsh);
@@ -274,11 +307,11 @@ architecture structure of execution_unit is
     -- mux for deciding into which register (out of the two specified in the instruction) to write
     wrmux : mux2 generic map(5) port map(d0 => RtE, d1 => RdE, s => RegDstE, y => WriteRegE);
 	
-	-- chose rd2 or sign extended value (add immediate to a register or add two values in registers)
-    srcbmux : mux2 generic map(32) port map(WriteDataE, SignImmE, ALUSrcE, SrcBE);
+	-- chose rd2, sign extended value or zero extended value (add immediate to a register or add two values in registers)
+    srcbmux : mux4 generic map(32) port map(d0 => WriteDataE, d1 => SignImmE, d2 => ZeroImmE, d3 => x"00000000", s => ALUSrcE, y => SrcBE);
 	
 	-- alu
-    mainalu : alu port map(SrcAE, SrcBE, ALUControlE, ALUOutE, ZeroE);
+    mainalu : alu port map(SrcAE, SrcBE, ShamtE, ALUControlE, ALUOutE, ZeroE);
 
 	-- chose to store value from alu or memory to register
     resmux : mux2 generic map(32) port map(AluoutW, ReadDataW, MemToRegW, ResultW);
@@ -310,7 +343,9 @@ architecture structure of execution_unit is
         RsD         => RsD,
         RtD         => RtD,
         RdD         => RdD,
+		ShamtD      => ShamtD,
         SignImmD    => SignImmD,
+        ZeroImmD    => ZeroImmD,
         RegWriteD   => RegWriteD,
         MemToRegD   => MemToRegD,
         MemWriteD   => MemWriteD,
@@ -322,7 +357,9 @@ architecture structure of execution_unit is
         RsE         => RsE,
         RtE         => RtE,
         RdE         => RdE,
+		ShamtE      => ShamtE,
         SignImmE    => SignImmE,
+        ZeroImmE    => ZeroImmE,
         RegWriteE   => RegWriteE,
         MemWriteE   => MemWriteE,
         MemToRegE   => MemToRegE,

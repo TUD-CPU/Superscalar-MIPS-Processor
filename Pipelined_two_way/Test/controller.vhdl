@@ -12,8 +12,8 @@ entity controller is
         MemToRegD   : out std_logic;
         MemWriteD   : out std_logic;
         BranchD     : out std_logic;
-        AluControlD : out std_logic_vector(2 downto 0);
-        AluSrcD     : out std_logic;
+        AluControlD : out std_logic_vector(3 downto 0);
+        AluSrcD     : out std_logic_vector(1 downto 0);
         RegDstD     : out std_logic;
         JumpD       : out std_logic
     );
@@ -26,7 +26,7 @@ architecture structure of controller is
             memtoreg : out std_logic;
             memwrite : out std_logic;
             branch   : out std_logic;
-            alusrc   : out std_logic;
+            alusrc   : out std_logic_vector(1 downto 0);
             regdst   : out std_logic;
             regwrite : out std_logic;
             jump     : out std_logic;
@@ -38,7 +38,7 @@ architecture structure of controller is
         port (
             funct       : in std_logic_vector(5 downto 0);
             aluop       : in std_logic_vector(1 downto 0);
-            AluControlE : out std_logic_vector(2 downto 0)
+            AluControlE : out std_logic_vector(3 downto 0)
         );
     end component;
 

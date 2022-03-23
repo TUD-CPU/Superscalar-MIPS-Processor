@@ -13,6 +13,11 @@ ghdl -a mux2.vhdl
 ghdl -e mux2
 ghdl -r mux2 --vcd=testbench.vcd
 
+ghdl -s mux4.vhdl
+ghdl -a mux4.vhdl
+ghdl -e mux4
+ghdl -r mux4 --vcd=testbench.vcd
+
 ghdl -s regfile.vhdl
 ghdl -a regfile.vhdl
 ghdl -e regfile
@@ -27,6 +32,11 @@ ghdl -s sl2.vhdl
 ghdl -a sl2.vhdl
 ghdl -e sl2
 ghdl -r sl2 --vcd=testbench.vcd
+
+ghdl -s sl16.vhdl
+ghdl -a sl16.vhdl
+ghdl -e sl16
+ghdl -r sl16 --vcd=testbench.vcd
 
 ghdl -s syncresff.vhdl
 ghdl -a syncresff.vhdl

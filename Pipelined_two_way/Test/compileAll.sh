@@ -33,6 +33,11 @@ ghdl -a signext.vhdl
 ghdl -e signext
 ghdl -r signext --vcd=testbench.vcd
 
+ghdl -s sl16.vhdl
+ghdl -a sl16.vhdl
+ghdl -e sl16
+ghdl -r sl16 --vcd=testbench.vcd
+
 ghdl -s sl2.vhdl
 ghdl -a sl2.vhdl
 ghdl -e sl2

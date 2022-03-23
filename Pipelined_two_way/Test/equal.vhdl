@@ -14,7 +14,7 @@ end;
 architecture behavior of equal is
 begin
 	process (RD1D, RD2D) begin
-		if(to_integer(unsigned(RD1D)) = to_integer(unsigned(RD2D))) then
+		if(to_integer(signed(RD1D)) = to_integer(signed(RD2D))) then
 		EqualD <= '1';
 		else
 		EqualD <= '0';

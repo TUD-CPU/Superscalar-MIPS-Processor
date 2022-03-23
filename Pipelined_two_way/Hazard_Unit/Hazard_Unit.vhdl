@@ -82,10 +82,10 @@ begin
 
 	--lwstall (Stalling Decode Phase when an instruction uses registers that are written by a lw instruction currently in Execution phase)
   	process (RsD1, RtE1, RtD1, MemToRegE1, RsD2, RtE2, RtD2, MemToRegE2) begin
-		if (((RsD1 = RtE1) or (RtD1 = RtE1)) and (MemToRegE1 = '1')) OR
-		   (((RsD1 = RtE2) or (RtD1 = RtE2)) and (MemToRegE2 = '1')) OR
-		   (((RsD2 = RtE1) or (RtD2 = RtE1)) and (MemToRegE1 = '1')) OR
-		   (((RsD2 = RtE2) or (RtD2 = RtE2)) and (MemToRegE2 = '1')) then
+		if (((RsD1 = RtE1) or (RtD1 = RtE1)) and (RtE1 /= "00000") and (MemToRegE1 = '1')) OR
+		   (((RsD1 = RtE2) or (RtD1 = RtE2)) and (RtE2 /= "00000") and (MemToRegE2 = '1')) OR
+		   (((RsD2 = RtE1) or (RtD2 = RtE1)) and (RtE1 /= "00000") and (MemToRegE1 = '1')) OR
+		   (((RsD2 = RtE2) or (RtD2 = RtE2)) and (RtE2 /= "00000") and (MemToRegE2 = '1')) then
 			lwstall <= '1';
 		else 
 			lwstall <= '0';
@@ -93,7 +93,7 @@ begin
 		-- lwstall <= (((RsD = RtE) or (RtD = RtE)) and (MemToRegE = '1'));
 	end process;
 	
-	--same address stall (Execute EU1 then EU2 when storing and loading to/from the same address in Memory Phase)
+	--same address stall (Execute EU1 first, then EU2 when storing and loading to/from the same address in Memory Phase)
 	process (MemToRegM1, MemWriteM2, MemToRegM2, MemWriteM1, ALUOutM1, ALUOutM2) begin
 		if ( (MemToRegM1 = '1' and MemWriteM2 = '1') or (MemToRegM2 = '1' and MemWriteM1 = '1') ) and (ALUOutM1 = ALUOutM2) then
 			sameAddressStall <= '1';
@@ -133,6 +133,8 @@ begin
             when "101011" => controlF1 <= "00"; -- sw
             when "000100" => controlF1 <= "00"; -- beq
             when "001000" => controlF1 <= "10"; -- addi
+			when "001110" => controlF1 <= "10"; -- xori
+			when "001111" => controlF1 <= "10"; -- lui
             when "000010" => controlF1 <= "00"; -- j
             when others   => controlF1 <= "--"; -- illegal
         end case;
@@ -145,6 +147,8 @@ begin
             when "101011" => controlF2 <= "00"; -- sw
             when "000100" => controlF2 <= "00"; -- beq
             when "001000" => controlF2 <= "10"; -- addi
+			when "001110" => controlF2 <= "10"; -- xori
+			when "001111" => controlF2 <= "10"; -- lui
             when "000010" => controlF2 <= "00"; -- j
             when others   => controlF2 <= "--"; -- illegal
         end case;
@@ -218,7 +222,7 @@ begin
     StallD2 <= lwstall OR branchstall OR sameAddressStall;
 	StallE2 <= sameAddressStall;
 	StallM2 <= sameAddressStall;
-	StallW2 <= '0'; -- Pruefe forwarding von resultw2 nach execution stage 1 und 2
+	StallW2 <= '0';
     FlushE2 <= lwstall OR branchstall;
 	FlushM2 <= '0';
 	FlushW2 <= sameAddressStall;
